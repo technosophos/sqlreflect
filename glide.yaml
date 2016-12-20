@@ -1,0 +1,4 @@
+package: github.com/technosophos/sqlreflect
+import:
+- package: github.com/Masterminds/squirrel
+- package: github.com/lib/pq
