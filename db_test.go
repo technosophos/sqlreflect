@@ -16,6 +16,7 @@ import (
 // SQLREFLECT_DB="user=foo dbname=bar" go test ./...
 
 var dbConnStr = "user=mbutcher dbname=sqlreflect sslmode=disable"
+var dbDriverStr = "postgres"
 var db *sql.DB
 
 func TestMain(m *testing.M) {
@@ -28,7 +29,7 @@ func TestMain(m *testing.M) {
 		dbConnStr = cstr
 	}
 
-	c, err := sql.Open("postgres", dbConnStr)
+	c, err := sql.Open(dbDriverStr, dbConnStr)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -38,7 +39,18 @@ func TestMain(m *testing.M) {
 		os.Exit(2)
 	}
 	db = c
+	if err := setup(c); err != nil {
+		fmt.Println(err)
+		os.Exit(2)
+	}
+
+	// Run the tests
 	exit := m.Run()
+
+	if err := teardown(c); err != nil {
+		fmt.Println(err)
+		os.Exit(2)
+	}
 	c.Close()
 
 	os.Exit(exit)
@@ -48,5 +60,62 @@ func TestSchemaInfo(t *testing.T) {
 	if err := db.Ping(); err != nil {
 		t.Error("failed ping")
 	}
-	t.Skip("not implemented")
+	si := New(DBOptions{Driver: "postgres", Queryer: db})
+	if !si.Supported() {
+		t.Fatal("Unsupported database")
+	}
+}
+
+func setup(db *sql.DB) error {
+	for _, s := range createTables() {
+		if _, err := db.Exec(s); err != nil {
+			fmt.Println("Setup failed. Cleaning up")
+			teardown(db)
+			return fmt.Errorf("Statement %q failed: %s", s, err)
+		}
+	}
+	return nil
+}
+
+func teardown(db *sql.DB) error {
+	var last error
+	for _, s := range dropTables() {
+		if _, err := db.Exec(s); err != nil {
+			last = fmt.Errorf("Statement %q failed: %s", s, err)
+			fmt.Println(last)
+		}
+	}
+	return last
+}
+
+func createTables() []string {
+	return []string{
+		`CREATE TABLE person (
+			id SERIAL,
+			first_name VARCHAR DEFAULT '',
+			last_name VARCHAR DEFAULT '',
+			PRIMARY KEY (id)
+		)`,
+		`CREATE TABLE org (
+			id SERIAL,
+			name VARCHAR DEFAULT '',
+			president INTEGER DEFAULT 0 REFERENCES person(id) ON DELETE SET NULL,
+			PRIMARY KEY (id)
+		)`,
+		`CREATE TABLE employees (
+			id SERIAL,
+			org INTEGER DEFAULT 0 REFERENCES org(id),
+			-- Docs suggest this will use primary key. Useful for testing.
+			person INTEGER DEFAULT 0 REFERENCES person,
+			PRIMARY KEY (id)
+		)`,
+	}
+}
+
+func dropTables() []string {
+	return []string{
+		`DROP TABLE employees`,
+		`DROP TABLE org`,
+		`DROP TABLE person`,
+	}
 }
