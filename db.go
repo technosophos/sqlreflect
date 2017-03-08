@@ -4,16 +4,18 @@ import (
 	"database/sql"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/Masterminds/structable"
 )
 
 // Queryer defines an interface for querying databases
 type Queryer interface {
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	squirrel.DBProxyBeginner
+	//Query(query string, args ...interface{}) (*sql.Rows, error)
+	//QueryRow(query string, args ...interface{}) *sql.Row
 
-	// We need exec because squirrel's select builder requires it.
+	//// We need exec because squirrel's select builder requires it.
 
-	Exec(query string, args ...interface{}) (sql.Result, error)
+	//Exec(query string, args ...interface{}) (sql.Result, error)
 }
 
 // Preparer provides support for prepared statements.
@@ -37,6 +39,11 @@ type DBOptions struct {
 	DisableCache bool
 }
 
+// DbRecorder returns a new structable.DbRecorder ready to be bound to a table.
+func (d *DBOptions) DbRecorder() *structable.DbRecorder {
+	return structable.New(d.Queryer, d.Driver)
+}
+
 // SchemaInfo provides access to the database schemata.
 type SchemaInfo struct {
 	opts   *DBOptions
@@ -50,9 +57,6 @@ type SchemaInfo struct {
 
 // New creates a new SchemaInfo.
 func New(opts DBOptions) *SchemaInfo {
-	//if opts.Placeholder == nil {
-	//opts.Placeholder = squirrel.Question
-	//}
 	s := &SchemaInfo{
 		opts:   &opts,
 		runner: opts.Queryer,
@@ -86,8 +90,22 @@ func (s *SchemaInfo) Supported() bool {
 	return err == nil
 }
 
-func (s *SchemaInfo) Tables() []*Table {
-	return []*Table{}
+func (s *SchemaInfo) Tables() ([]*Table, error) {
+	t := &Table{}
+	st := structable.New(s.opts.Queryer, s.opts.Driver).Bind(t.TableName(), t)
+	fn := func(d structable.Describer, q squirrel.SelectBuilder) (squirrel.SelectBuilder, error) {
+		// Basically, remove the default limits.
+		return q, nil
+	}
+	items, err := structable.ListWhere(st, fn)
+	if err != nil {
+		return []*Table{}, err
+	}
+	tables := make([]*Table, len(items))
+	for i, item := range items {
+		tables[i] = item.Interface().(*Table)
+	}
+	return tables, nil
 }
 
 func (s *SchemaInfo) Select(columns ...string) squirrel.SelectBuilder {

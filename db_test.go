@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Masterminds/squirrel"
 	_ "github.com/lib/pq"
 )
 
@@ -60,9 +61,30 @@ func TestSchemaInfo(t *testing.T) {
 	if err := db.Ping(); err != nil {
 		t.Error("failed ping")
 	}
-	si := New(DBOptions{Driver: "postgres", Queryer: db})
+	si := New(DBOptions{Driver: "postgres", Queryer: squirrel.NewStmtCacheProxy(db)})
 	if !si.Supported() {
 		t.Fatal("Unsupported database")
+	}
+}
+
+func TestSchemaInfo_Tables(t *testing.T) {
+	si := New(DBOptions{Driver: "postgres", Queryer: squirrel.NewStmtCacheProxy(db)})
+	tables, err := si.Tables()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := len(tables); n < len(createTables()) {
+		t.Errorf("Unexpected number of tables: %d", n)
+	}
+	found := false
+	for _, tt := range tables {
+		t.Logf("Table: %q", tt.TableNameField)
+		if tt.TableNameField == "person" {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("Did not find table 'person'")
 	}
 }
 

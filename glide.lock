@@ -1,12 +1,14 @@
-hash: 05e26b4f6558867aff6524b97429430e3f73971a0d5f304f361a66a92c770fe1
-updated: 2016-12-20T08:46:21.718447331-07:00
+hash: eaa0135f57fb5435677d297208f7c3f84cddec7904194ba050709086a1047430
+updated: 2017-01-10T10:00:15.457620716-07:00
 imports:
 - name: github.com/lann/builder
   version: f22ce00fd9394014049dad11c244859432bd6820
 - name: github.com/lann/ps
   version: 62de8c46ede02a7675c4c79c84883eb164cb71e3
 - name: github.com/lib/pq
-  version: 5bf161122cd640c2a5a2c1d7fa49ea9befff31dd
+  version: 8df6253d1317616f36b0c3740eb30c239a7372cb
 - name: github.com/Masterminds/squirrel
   version: 20f192218cf52a73397fa2df45bdda720f3e47c8
+- name: github.com/Masterminds/structable
+  version: 6e1357254de55587c7b9593412b98383a611ea42
 devImports: []

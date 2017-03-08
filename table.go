@@ -1,16 +1,23 @@
 package sqlreflect
 
 type Table struct {
-	TableLocator
+	//TableLocator
+	TableCatalog   string `stbl:"table_catalog"`
+	TableSchema    string `stbl:"table_schema"`
+	TableNameField string `stbl:"table_name"`
 	// TableType is normally one of BASE TABLE, VIEW, FOREIGN TABLE, or LOCAL TEMPORARY
-	TableType                 string `sql:"table_type"`
-	SelfReferencingColumnName string `sql:"self_referencing_column_name"`
-	ReferenceGeneration       string `sql:"reference_generation"`
-	UserDefinedTypeCatalog    string `sql:"user_defined_type_catalog"`
-	UserDefinedTypeSchema     string `sql:"user_defined_type_schema"`
-	IsInsertableInto          bool   `sql:"is_insertable_into"` // actual type is yes_no
-	IsTyped                   bool   `sql:"is_typed"`           // also yes_or_no
-	CommitAction              string `sql:"commit_action"`
+	TableType                 string `stbl:"table_type"`
+	SelfReferencingColumnName string `stbl:"self_referencing_column_name"`
+	ReferenceGeneration       string `stbl:"reference_generation"`
+	UserDefinedTypeCatalog    string `stbl:"user_defined_type_catalog"`
+	UserDefinedTypeSchema     string `stbl:"user_defined_type_schema"`
+	IsInsertableInto          bool   `stbl:"is_insertable_into"` // actual type is yes_no
+	IsTyped                   bool   `stbl:"is_typed"`           // also yes_or_no
+	CommitAction              string `stbl:"commit_action"`
+}
+
+func (t Table) TableName() string {
+	return "information_schema.tables"
 }
 
 // Privileges returns the table privileges for this table.
