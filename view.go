@@ -1,7 +1,11 @@
 package sqlreflect
 
 type View struct {
-	TableLocator
+	//TableLocator
+	TableCatalog   string `stbl:"table_catalog"`
+	TableSchema    string `stbl:"table_schema"`
+	TableNameField string `stbl:"table_name"`
+	// View definition
 	ViewDefinition          string `sql:"view_definition"`
 	CheckOption             string `sql:"check_option"`
 	IsUpdatable             bool   `sql:"is_updatable"`
@@ -13,6 +17,10 @@ type View struct {
 
 func (v *View) Tables() []*Table {
 	return []*Table{}
+}
+
+func (v *View) TableName() string {
+	return "information_schema.views"
 }
 
 // Columns returns a list of columns for this view.

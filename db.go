@@ -117,6 +117,24 @@ func (s *SchemaInfo) Tables() ([]*Table, error) {
 	return tables, nil
 }
 
+func (s *SchemaInfo) Views() ([]*View, error) {
+	view := &View{}
+	st := structable.New(s.opts.Queryer, s.opts.Driver).Bind(view.TableName(), view)
+	fn := func(d structable.Describer, q squirrel.SelectBuilder) (squirrel.SelectBuilder, error) {
+		// Basically, remove the default limits.
+		return q, nil
+	}
+	items, err := structable.ListWhere(st, fn)
+	if err != nil {
+		return []*View{}, err
+	}
+	views := make([]*View, len(items))
+	for i, item := range items {
+		views[i] = item.Interface().(*View)
+	}
+	return views, nil
+}
+
 func (s *SchemaInfo) Select(columns ...string) squirrel.SelectBuilder {
 	return squirrel.Select(columns...).RunWith(s.runner).PlaceholderFormat(s.placeholder)
 }

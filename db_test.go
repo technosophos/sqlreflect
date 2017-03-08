@@ -89,6 +89,20 @@ func TestSchemaInfo_Tables(t *testing.T) {
 	}
 }
 
+func TestSchemaInfo_Views(t *testing.T) {
+	si := New(DBOptions{Driver: "postgres", Queryer: squirrel.NewStmtCacheProxy(db)})
+	views, err := si.Views()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := len(views); n < 3 {
+		t.Errorf("Unexpected number of tables: %d", n)
+	}
+
+	// TODO: Should probably create a view in the schema creation and test it
+	// here.
+}
+
 func setup(db *sql.DB) error {
 	for _, s := range createTables() {
 		if _, err := db.Exec(s); err != nil {
