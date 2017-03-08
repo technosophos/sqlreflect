@@ -33,10 +33,16 @@ type DBOptions struct {
 	// Preparer, this will use cached prepared statements instead of
 	// directly executed queries. To disable the use of a query cache,
 	// set DisableCache to true.
+	//
+	// FIXME: Right now, this is a squirrel.StmtCacheProxy
 	Queryer Queryer
 
 	// DisableCache disables using a query cache and prepared statements.
 	DisableCache bool
+}
+
+func NewDBOptions(db *sql.DB, driver string) DBOptions {
+	return DBOptions{Driver: driver, Queryer: squirrel.NewStmtCacheProxy(db)}
 }
 
 // DbRecorder returns a new structable.DbRecorder ready to be bound to a table.
@@ -67,12 +73,15 @@ func New(opts DBOptions) *SchemaInfo {
 		s.placeholder = squirrel.Dollar
 	}
 
+	/* Once preparer and queryer are fixed, uncomment this.
 	_, isPrep := opts.Queryer.(Preparer)
 	if isPrep && !opts.DisableCache {
 		s.runner = squirrel.NewStmtCacher(opts.Queryer.(Preparer))
 	} else {
 		s.runner = opts.Queryer
 	}
+	*/
+	s.runner = opts.Queryer
 
 	return s
 }

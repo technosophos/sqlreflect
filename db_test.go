@@ -61,7 +61,8 @@ func TestSchemaInfo(t *testing.T) {
 	if err := db.Ping(); err != nil {
 		t.Error("failed ping")
 	}
-	si := New(DBOptions{Driver: "postgres", Queryer: squirrel.NewStmtCacheProxy(db)})
+	opts := NewDBOptions(db, "postgres")
+	si := New(opts)
 	if !si.Supported() {
 		t.Fatal("Unsupported database")
 	}
