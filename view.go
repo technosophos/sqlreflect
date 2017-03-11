@@ -13,6 +13,8 @@ type View struct {
 	IsTriggerUpdatable      bool   `sql:"is_trigger_updatable"`
 	IsTriggerDeletable      bool   `sql:"is_trigger_deletable"`
 	IsTriggerInsertableInto bool   `sql:"is_trigger_insertable_into"`
+
+	opts *DBOptions
 }
 
 func (v *View) Tables() []*Table {

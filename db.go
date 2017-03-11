@@ -2,6 +2,7 @@ package sqlreflect
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/Masterminds/structable"
@@ -99,12 +100,15 @@ func (s *SchemaInfo) Supported() bool {
 	return err == nil
 }
 
-func (s *SchemaInfo) Tables() ([]*Table, error) {
+// Tables gets all tables.
+// Setting catalog and schema to something other than an empty string will
+// constrain by those.
+func (s *SchemaInfo) Tables(catalog, schema string) ([]*Table, error) {
 	t := &Table{}
 	st := structable.New(s.opts.Queryer, s.opts.Driver).Bind(t.TableName(), t)
 	fn := func(d structable.Describer, q squirrel.SelectBuilder) (squirrel.SelectBuilder, error) {
-		// Basically, remove the default limits.
-		return q, nil
+		q = q.Where(`table_type='BASE TABLE'`)
+		return optionalCatalogSchema(q, catalog, schema), nil
 	}
 	items, err := structable.ListWhere(st, fn)
 	if err != nil {
@@ -112,17 +116,42 @@ func (s *SchemaInfo) Tables() ([]*Table, error) {
 	}
 	tables := make([]*Table, len(items))
 	for i, item := range items {
-		tables[i] = item.Interface().(*Table)
+		tt := item.Interface().(*Table)
+		tt.opts = s.opts
+		tables[i] = tt
 	}
 	return tables, nil
 }
 
-func (s *SchemaInfo) Views() ([]*View, error) {
+// Table gets a table by name (required).
+// If catalog and schema are set, those will be used as additional constraints.
+// Constraining by catalog (e.g. database) is highly recommended.
+func (s *SchemaInfo) Table(name, catalog, schema string) (*Table, error) {
+	t := &Table{}
+	st := structable.New(s.opts.Queryer, s.opts.Driver).Bind(t.TableName(), t)
+	fn := func(d structable.Describer, q squirrel.SelectBuilder) (squirrel.SelectBuilder, error) {
+		// Basically, remove the default limits.
+		q = q.Where(`table_type='BASE TABLE' AND table_name = ?`, name)
+		return optionalCatalogSchema(q, catalog, schema), nil
+	}
+	items, err := structable.ListWhere(st, fn)
+	if err != nil {
+		return t, err
+	}
+
+	if l := len(items); l != 1 {
+		return t, fmt.Errorf("Expected 1 table, got %d", l)
+	}
+	table := items[0].Interface().(*Table)
+	table.opts = s.opts
+	return table, nil
+}
+
+func (s *SchemaInfo) Views(catalog, schema string) ([]*View, error) {
 	view := &View{}
 	st := structable.New(s.opts.Queryer, s.opts.Driver).Bind(view.TableName(), view)
 	fn := func(d structable.Describer, q squirrel.SelectBuilder) (squirrel.SelectBuilder, error) {
-		// Basically, remove the default limits.
-		return q, nil
+		return optionalCatalogSchema(q, catalog, schema), nil
 	}
 	items, err := structable.ListWhere(st, fn)
 	if err != nil {
@@ -130,9 +159,31 @@ func (s *SchemaInfo) Views() ([]*View, error) {
 	}
 	views := make([]*View, len(items))
 	for i, item := range items {
-		views[i] = item.Interface().(*View)
+		vv := item.Interface().(*View)
+		vv.opts = s.opts
+		views[i] = vv
 	}
 	return views, nil
+}
+
+func (s *SchemaInfo) View(name, catalog, schema string) (*View, error) {
+	view := &View{}
+	st := structable.New(s.opts.Queryer, s.opts.Driver).Bind(view.TableName(), view)
+	fn := func(d structable.Describer, q squirrel.SelectBuilder) (squirrel.SelectBuilder, error) {
+		// View names are stored in table_name, since a view is a table.
+		q = q.Where("table_name=?", name)
+		return optionalCatalogSchema(q, catalog, schema), nil
+	}
+	items, err := structable.ListWhere(st, fn)
+	if err != nil {
+		return &View{}, err
+	}
+	if l := len(items); l != 1 {
+		return view, fmt.Errorf("Expected 1 view, got %d", l)
+	}
+	vv := items[0].Interface().(*View)
+	vv.opts = s.opts
+	return vv, nil
 }
 
 func (s *SchemaInfo) Select(columns ...string) squirrel.SelectBuilder {
