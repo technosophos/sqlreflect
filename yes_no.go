@@ -22,6 +22,8 @@ type YesNo struct {
 func (y *YesNo) Scan(v interface{}) error {
 	if fmt.Sprintf("%v", v) == "YES" {
 		y.Bool = true
+	} else {
+		y.Bool = false
 	}
 	return nil
 }
