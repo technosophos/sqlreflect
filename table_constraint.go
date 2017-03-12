@@ -13,8 +13,8 @@ type TableConstraint struct {
 	ConstraintName    string `sql:"constraint_name"`
 
 	ConstraintType    ConstraintType `stbl:"constraint_type"`
-	IsDeferrable      bool           `stbl:"is_deferrable"`
-	InitiallyDeferred bool           `stbl"initially_deferred"`
+	IsDeferrable      YesNo          `stbl:"is_deferrable"`
+	InitiallyDeferred YesNo          `stbl:"initially_deferred"`
 
 	opts *DBOptions
 }

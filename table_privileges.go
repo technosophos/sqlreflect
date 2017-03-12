@@ -10,8 +10,8 @@ type TablePrivilege struct {
 	Grantor       string `stbl:"grantor"`
 	Grantee       string `stbl:"grantee"`
 	PrivilegeType string `stbl:"privilege_type"`
-	IsGrantable   bool   `stbl:"is_grantable"`
-	WithHierarchy bool   `stbl:"with_hierarchy"`
+	IsGrantable   YesNo  `stbl:"is_grantable"`
+	WithHierarchy YesNo  `stbl:"with_hierarchy"`
 
 	opts *DBOptions
 }
