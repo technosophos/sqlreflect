@@ -1,14 +1,14 @@
 hash: eaa0135f57fb5435677d297208f7c3f84cddec7904194ba050709086a1047430
-updated: 2017-03-07T22:06:58.435223952-07:00
+updated: 2017-03-11T21:16:15.675634249-07:00
 imports:
 - name: github.com/lann/builder
   version: f22ce00fd9394014049dad11c244859432bd6820
 - name: github.com/lann/ps
   version: 62de8c46ede02a7675c4c79c84883eb164cb71e3
 - name: github.com/lib/pq
-  version: ca5bc43047f2138703da0f3d3ca89a59f3d597f1
+  version: e4af84aab01e159ca479940dbde304519e8e8811
 - name: github.com/Masterminds/squirrel
   version: 20f192218cf52a73397fa2df45bdda720f3e47c8
 - name: github.com/Masterminds/structable
-  version: b820164ef20fda1d22fedb92e07de5777a0f49ef
+  version: d3f2df7c38e2cd8a7c8e28e33c187814a285c78a
 devImports: []

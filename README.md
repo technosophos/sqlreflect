@@ -44,3 +44,8 @@ slipped in here too.
 
 Most of my understanding of the information schema comes from the
 PostgreSQL documentation.
+
+## TODO
+
+- [ ] Enable querying CHECK constraints to actually return the
+  constraint. (See `information_schame.check_constraints`)

@@ -29,6 +29,10 @@ func TestTable_Privileges(t *testing.T) {
 	if len(privs) == 0 {
 		t.Fatalf("Expected at least one privilege on %s", table.TableNameField)
 	}
+
+	if !privs[0].IsGrantable.Bool {
+		t.Errorf("Expected %v to be grantable.", privs[0])
+	}
 }
 
 func TestTable_Constraints(t *testing.T) {

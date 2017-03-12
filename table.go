@@ -102,7 +102,7 @@ func (this *Table) Columns() []*Column {
 // PrimaryKey returns the primary key for this table.
 //
 // TODO: Is it ever possible to have two table constraints for one primary
-// key.
+// key?
 func (this *Table) PrimaryKey() (*TableConstraint, error) {
 	tt, err := this.ConstraintsByType(ConstraintPrimaryKey)
 	if err != nil {
