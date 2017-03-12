@@ -1,6 +1,8 @@
 package sqlreflect
 
 import (
+	"errors"
+
 	"github.com/Masterminds/squirrel"
 	"github.com/Masterminds/structable"
 )
@@ -50,8 +52,46 @@ func (this *Table) Privileges() ([]*TablePrivilege, error) {
 }
 
 // Constraints returns the constraints imposed on this table.
-func (this *Table) Constraints() []*TableConstraint {
-	return []*TableConstraint{}
+func (this *Table) Constraints() ([]*TableConstraint, error) {
+	t := &TableConstraint{}
+	res := []*TableConstraint{}
+	st := structable.New(this.opts.Queryer, this.opts.Driver).Bind(t.TableName(), t)
+	fn := func(d structable.Describer, q squirrel.SelectBuilder) (squirrel.SelectBuilder, error) {
+		q = q.Where("table_schema=? AND table_catalog = ? AND table_name = ?",
+			this.TableSchema, this.TableCatalog, this.TableNameField)
+		return q, nil
+	}
+	items, err := structable.ListWhere(st, fn)
+	if err != nil {
+		return res, err
+	}
+	for _, item := range items {
+		tt := item.Interface().(*TableConstraint)
+		tt.opts = this.opts
+		res = append(res, tt)
+	}
+	return res, nil
+}
+
+func (this *Table) ConstraintsByType(name ConstraintType) ([]*TableConstraint, error) {
+	t := &TableConstraint{}
+	res := []*TableConstraint{}
+	st := structable.New(this.opts.Queryer, this.opts.Driver).Bind(t.TableName(), t)
+	fn := func(d structable.Describer, q squirrel.SelectBuilder) (squirrel.SelectBuilder, error) {
+		q = q.Where("table_schema=? AND table_catalog = ? AND table_name = ? AND constraint_type = ?",
+			this.TableSchema, this.TableCatalog, this.TableNameField, string(name))
+		return q, nil
+	}
+	items, err := structable.ListWhere(st, fn)
+	if err != nil {
+		return res, err
+	}
+	for _, item := range items {
+		tt := item.Interface().(*TableConstraint)
+		tt.opts = this.opts
+		res = append(res, tt)
+	}
+	return res, nil
 }
 
 // Columns returns the columns contained by this table.
@@ -63,13 +103,20 @@ func (this *Table) Columns() []*Column {
 //
 // TODO: Is it ever possible to have two table constraints for one primary
 // key.
-func (this *Table) PrimaryKey() *TableConstraint {
-	return &TableConstraint{}
+func (this *Table) PrimaryKey() (*TableConstraint, error) {
+	tt, err := this.ConstraintsByType(ConstraintPrimaryKey)
+	if err != nil {
+		return nil, err
+	}
+	if len(tt) == 0 {
+		return nil, errors.New("No primary key")
+	}
+	return tt[0], nil
 }
 
 // ForeignKeys returns a list of foreign key table constraints.
-func (this *Table) ForeignKeys() []*TableConstraint {
-	return []*TableConstraint{}
+func (this *Table) ForeignKeys() ([]*TableConstraint, error) {
+	return this.ConstraintsByType(ConstraintForeignKey)
 }
 
 // InViews returns a list of views that use this table.

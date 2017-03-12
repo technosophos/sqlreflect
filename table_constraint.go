@@ -1,19 +1,24 @@
 package sqlreflect
 
-type ConstraintType string
-
-const (
-	ConstraintCheck      ConstraintType = "CHECK"
-	ConstraintForeignKey ConstraintType = "FOREIGN KEY"
-	ConstraintPrimaryKey ConstraintType = "PRIMARY KEY"
-	ConstraintUnique     ConstraintType = "UNIQUE"
-)
-
 // TODO
 type TableConstraint struct {
-	ConstraintLocator
-	TableLocator
-	ConstraintType    ConstraintType `sql:"constraint_type"`
-	IsDeferrable      bool           `sql:"is_deferrable"`
-	InitiallyDeferred bool           `sql:"initially_deferred"`
+	//TableLocator
+	TableCatalog   string `stbl:"table_catalog"`
+	TableSchema    string `stbl:"table_schema"`
+	TableNameField string `stbl:"table_name"`
+
+	// ConstraintLocator
+	ConstraintCatalog string `sql:"constraint_catalog"`
+	ConstraintSchema  string `sql:"constraint_schema"`
+	ConstraintName    string `sql:"constraint_name"`
+
+	ConstraintType    ConstraintType `stbl:"constraint_type"`
+	IsDeferrable      bool           `stbl:"is_deferrable"`
+	InitiallyDeferred bool           `stbl"initially_deferred"`
+
+	opts *DBOptions
+}
+
+func (t *TableConstraint) TableName() string {
+	return "information_schema.table_constraints"
 }
