@@ -94,3 +94,18 @@ func TestTable_ForeignKeys(t *testing.T) {
 		t.Fatalf("Expected 2 foreign keys for the employees table, but got %d", len(fk))
 	}
 }
+
+func TestTable_InViews(t *testing.T) {
+	table := loadTestTable(t, "person")
+	views, err := table.InViews()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(views) != 1 {
+		t.Errorf("Expected 1 view, got %d", len(views))
+	}
+
+	if views[0].ViewDefinition == "" {
+		t.Errorf("View was not initialized")
+	}
+}

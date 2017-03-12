@@ -122,6 +122,33 @@ func (this *Table) ForeignKeys() ([]*TableConstraint, error) {
 // InViews returns a list of views that use this table.
 //
 // Not that this might not be the only table used by that view.
-func (this *Table) InViews() []*View {
-	return []*View{}
+func (this *Table) InViews() ([]*View, error) {
+	q := squirrel.Select("view_name", "view_catalog", "view_schema").
+		From("information_schema.view_table_usage").
+		Where(`table_catalog = ? AND table_schema = ? AND table_name = ?`,
+			this.TableCatalog, this.TableSchema, this.TableNameField).
+		RunWith(this.opts.Queryer)
+
+	if this.opts.Driver == "postgres" {
+		q = q.PlaceholderFormat(squirrel.Dollar)
+	}
+
+	rows, err := q.Query()
+	if err != nil {
+		return []*View{}, err
+	}
+	defer rows.Close()
+
+	vs := []*View{}
+	for rows.Next() {
+		v := &View{}
+		rows.Scan(&v.TableNameField, &v.TableCatalog, &v.TableSchema)
+		st := structable.New(this.opts.Queryer, this.opts.Driver).Bind(v.TableName(), v)
+		if err := st.LoadWhere("table_catalog = ? AND table_schema = ? AND table_name = ?",
+			v.TableCatalog, v.TableSchema, v.TableNameField); err != nil {
+			return vs, err
+		}
+		vs = append(vs, v)
+	}
+	return vs, rows.Err()
 }

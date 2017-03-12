@@ -6,13 +6,13 @@ type View struct {
 	TableSchema    string `stbl:"table_schema"`
 	TableNameField string `stbl:"table_name"`
 	// View definition
-	ViewDefinition          string `sql:"view_definition"`
-	CheckOption             string `sql:"check_option"`
-	IsUpdatable             bool   `sql:"is_updatable"`
-	IsInsertableInto        bool   `sql:"is_insertable_into"`
-	IsTriggerUpdatable      bool   `sql:"is_trigger_updatable"`
-	IsTriggerDeletable      bool   `sql:"is_trigger_deletable"`
-	IsTriggerInsertableInto bool   `sql:"is_trigger_insertable_into"`
+	ViewDefinition          string `stbl:"view_definition"`
+	CheckOption             string `stbl:"check_option"`
+	IsUpdatable             YesNo  `stbl:"is_updatable"`
+	IsInsertableInto        YesNo  `stbl:"is_insertable_into"`
+	IsTriggerUpdatable      YesNo  `stbl:"is_trigger_updatable"`
+	IsTriggerDeletable      YesNo  `stbl:"is_trigger_deletable"`
+	IsTriggerInsertableInto YesNo  `stbl:"is_trigger_insertable_into"`
 
 	opts *DBOptions
 }
@@ -33,7 +33,7 @@ func (v *View) Columns() []*Column {
 }
 
 type ViewLocator struct {
-	ViewCatalog string `sql:"view_catalog"`
-	ViewSchema  string `sql:"view_schema"`
-	ViewName    string `sql:"view_name"`
+	ViewCatalog string `stbl:"view_catalog"`
+	ViewSchema  string `stbl:"view_schema"`
+	ViewName    string `stbl:"view_name"`
 }

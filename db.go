@@ -2,6 +2,7 @@ package sqlreflect
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 
 	"github.com/Masterminds/squirrel"
@@ -189,3 +190,13 @@ func (s *SchemaInfo) View(name, catalog, schema string) (*View, error) {
 func (s *SchemaInfo) Select(columns ...string) squirrel.SelectBuilder {
 	return squirrel.Select(columns...).RunWith(s.runner).PlaceholderFormat(s.placeholder)
 }
+
+type YesNo bool
+
+func (y YesNo) Scan(v interface{}) error {
+	if fmt.Sprintf("%v", v) == "YES" {
+		y = true
+	}
+	return nil
+}
+func (y YesNo) Value() (driver.Value, error) { return y, nil }
