@@ -116,6 +116,29 @@ func (this *Table) Columns() ([]*Column, error) {
 	return res, nil
 }
 
+// Column returns a column by name.
+func (this *Table) Column(name string) (*Column, error) {
+	t := &Column{}
+	st := structable.New(this.opts.Queryer, this.opts.Driver).Bind(t.TableName(), t)
+	fn := func(d structable.Describer, q squirrel.SelectBuilder) (squirrel.SelectBuilder, error) {
+		q = q.Where("table_schema=? AND table_catalog = ? AND table_name = ? AND column_name = ?",
+			this.TableSchema, this.TableCatalog, this.TableNameField, name).Limit(1)
+		return q, nil
+	}
+	items, err := structable.ListWhere(st, fn)
+	if err != nil {
+		return t, err
+	}
+
+	if len(items) != 1 {
+		return t, errors.New("named column not found")
+	}
+
+	item := items[0].Interface().(*Column)
+	item.opts = this.opts
+	return item, nil
+}
+
 // PrimaryKey returns the primary key for this table.
 //
 // TODO: Is it ever possible to have two table constraints for one primary

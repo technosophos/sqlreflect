@@ -1,5 +1,10 @@
 package sqlreflect
 
+import (
+	"github.com/Masterminds/squirrel"
+	"github.com/Masterminds/structable"
+)
+
 // Column represents a column (attribute) attached to a table.
 // A column can exist on exactly one table.
 type Column struct {
@@ -60,8 +65,26 @@ func (this *Column) Privileges() []*ColumnPrivilege {
 	return []*ColumnPrivilege{}
 }
 
-func (this *Column) Options() []*ColumnOption {
-	return []*ColumnOption{}
+func (this *Column) Options() ([]*ColumnOption, error) {
+	t := &ColumnOption{}
+	res := []*ColumnOption{}
+	st := structable.New(this.opts.Queryer, this.opts.Driver).Bind(t.TableName(), t)
+	fn := func(d structable.Describer, q squirrel.SelectBuilder) (squirrel.SelectBuilder, error) {
+		q = q.Where("table_schema=? AND table_catalog = ? AND table_name = ? AND column_name = ?",
+			this.TableSchema, this.TableCatalog, this.TableNameField, this.Name)
+		return q, nil
+	}
+	items, err := structable.ListWhere(st, fn)
+	if err != nil {
+		return res, err
+	}
+	for _, item := range items {
+		tt := item.Interface().(*ColumnOption)
+		tt.opts = this.opts
+		res = append(res, tt)
+	}
+
+	return res, nil
 }
 
 func (this *Column) DomainUsage() []*ColumnDomainUsage {

@@ -148,5 +148,22 @@ func TestTable_Columns(t *testing.T) {
 			}
 		}
 	}
+}
 
+func TestTable_Column(t *testing.T) {
+	table := loadTestTable(t, "person")
+	c, err := table.Column("id")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if c.Name != "id" {
+		t.Errorf("Expected ordinal position 1 to be id, got %q", c.Name)
+	}
+	if c.IsNullable.Bool {
+		t.Error("Expected id to not be nullable")
+	}
+	if c.DataType != "integer" {
+		t.Errorf("Expected id DataType to be integer, got %q", c.DataType)
+	}
 }
