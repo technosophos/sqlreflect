@@ -68,6 +68,23 @@ func TestTable_ConstraintsByType(t *testing.T) {
 	}
 }
 
+func TestTable_Consraint(t *testing.T) {
+	table := loadTestTable(t, "org")
+	con, err := table.Constraint("org_pkey")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if con.TableNameField != "org" {
+		t.Errorf("Expected table org, got %q", con.TableNameField)
+	}
+
+	_, err = table.Constraint("org_no_such_key")
+	if err == nil {
+		t.Error("Expected org_no_such_key lookup to produce an error.")
+	}
+}
+
 func TestTable_PrimaryKey(t *testing.T) {
 	table := loadTestTable(t, "person")
 	pk, err := table.PrimaryKey()

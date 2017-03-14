@@ -65,6 +65,7 @@ func (this *Column) Privileges() []*ColumnPrivilege {
 	return []*ColumnPrivilege{}
 }
 
+// Options returns a list of column options set for this column.
 func (this *Column) Options() ([]*ColumnOption, error) {
 	t := &ColumnOption{}
 	res := []*ColumnOption{}

@@ -94,6 +94,28 @@ func (this *Table) ConstraintsByType(name ConstraintType) ([]*TableConstraint, e
 	return res, nil
 }
 
+func (this *Table) Constraint(name string) (*TableConstraint, error) {
+	t := &TableConstraint{}
+	st := structable.New(this.opts.Queryer, this.opts.Driver).Bind(t.TableName(), t)
+	fn := func(d structable.Describer, q squirrel.SelectBuilder) (squirrel.SelectBuilder, error) {
+		q = q.Where("table_schema=? AND table_catalog = ? AND table_name = ? AND constraint_name = ?",
+			this.TableSchema, this.TableCatalog, this.TableNameField, name).Limit(1)
+		return q, nil
+	}
+	items, err := structable.ListWhere(st, fn)
+	if err != nil {
+		return t, err
+	}
+
+	if len(items) != 1 {
+		return t, errors.New("no constraint found")
+	}
+
+	c := items[0].Interface().(*TableConstraint)
+	c.opts = this.opts
+	return c, nil
+}
+
 // Columns returns the columns contained by this table.
 func (this *Table) Columns() ([]*Column, error) {
 	t := &Column{}
