@@ -95,8 +95,25 @@ func (this *Table) ConstraintsByType(name ConstraintType) ([]*TableConstraint, e
 }
 
 // Columns returns the columns contained by this table.
-func (this *Table) Columns() []*Column {
-	return []*Column{}
+func (this *Table) Columns() ([]*Column, error) {
+	t := &Column{}
+	res := []*Column{}
+	st := structable.New(this.opts.Queryer, this.opts.Driver).Bind(t.TableName(), t)
+	fn := func(d structable.Describer, q squirrel.SelectBuilder) (squirrel.SelectBuilder, error) {
+		q = q.Where("table_schema=? AND table_catalog = ? AND table_name = ?",
+			this.TableSchema, this.TableCatalog, this.TableNameField)
+		return q, nil
+	}
+	items, err := structable.ListWhere(st, fn)
+	if err != nil {
+		return res, err
+	}
+	for _, item := range items {
+		tt := item.Interface().(*Column)
+		tt.opts = this.opts
+		res = append(res, tt)
+	}
+	return res, nil
 }
 
 // PrimaryKey returns the primary key for this table.

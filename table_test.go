@@ -113,3 +113,40 @@ func TestTable_InViews(t *testing.T) {
 		t.Errorf("View was not initialized")
 	}
 }
+
+func TestTable_Columns(t *testing.T) {
+	table := loadTestTable(t, "person")
+	cols, err := table.Columns()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if l := len(cols); l != 3 {
+		t.Errorf("Expected 3 columns, got %d", l)
+	}
+
+	for _, c := range cols {
+		switch c.OrdinalPosition {
+		case 1:
+			if c.Name != "id" {
+				t.Errorf("Expected ordinal position 1 to be id, got %q", c.Name)
+			}
+			if c.IsNullable.Bool {
+				t.Error("Expected id to not be nullable")
+			}
+			if c.DataType != "integer" {
+				t.Errorf("Expected id DataType to be integer, got %q", c.DataType)
+			}
+		case 2:
+			if c.Name != "first_name" {
+				t.Errorf("Expected ordinal position 2 to be first_name, got %q", c.Name)
+			}
+			if !c.IsNullable.Bool {
+				t.Error("Expected id to be nullable")
+			}
+			if c.DataType != "character varying" {
+				t.Errorf("Expected first_name DataType to be varchar, got %q", c.DataType)
+			}
+		}
+	}
+
+}
