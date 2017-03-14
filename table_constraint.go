@@ -8,9 +8,9 @@ type TableConstraint struct {
 	TableNameField string `stbl:"table_name"`
 
 	// ConstraintLocator
-	ConstraintCatalog string `sql:"constraint_catalog"`
-	ConstraintSchema  string `sql:"constraint_schema"`
-	ConstraintName    string `sql:"constraint_name"`
+	ConstraintCatalog string `stbl:"constraint_catalog"`
+	ConstraintSchema  string `stbl:"constraint_schema"`
+	ConstraintName    string `stbl:"constraint_name"`
 
 	ConstraintType    ConstraintType `stbl:"constraint_type"`
 	IsDeferrable      YesNo          `stbl:"is_deferrable"`

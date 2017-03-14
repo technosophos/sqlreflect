@@ -13,13 +13,21 @@ const (
 )
 
 type ConstraintLocator struct {
-	ConstraintCatalog string `sql:"constraint_catalog"`
-	ConstraintSchema  string `sql:"constraint_schema"`
-	ConstraintName    string `sql:"constraint_name"`
+	ConstraintCatalog string `stbl:"constraint_catalog"`
+	ConstraintSchema  string `stbl:"constraint_schema"`
+	ConstraintName    string `stbl:"constraint_name"`
 }
 
 type ConstraintColumnUsage struct {
-	TableLocator
-	ColumnName string `sql:"column_name"`
-	ConstraintLocator
+	//TableLocator
+	TableCatalog   string `stbl:"table_catalog"`
+	TableSchema    string `stbl:"table_schema"`
+	TableNameField string `stbl:"table_name"`
+
+	ColumnName string `stbl:"column_name"`
+
+	// ConstraintLocator
+	ConstraintCatalog string `stbl:"constraint_catalog"`
+	ConstraintSchema  string `stbl:"constraint_schema"`
+	ConstraintName    string `stbl:"constraint_name"`
 }

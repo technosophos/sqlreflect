@@ -95,12 +95,42 @@ func (this *Column) UDTUsage() []*ColumnUDTUsage {
 	return []*ColumnUDTUsage{}
 }
 
-// Constrains returns a record of a constaint that references this column.
+// Constrains returns a record of constraints that reference this column.
 //
 // For instance, if another table references this column as a foreign key,
-// this will return information about that constraint.
-func (this *Column) Constrains() []*ConstraintColumnUsage {
-	return []*ConstraintColumnUsage{}
+// this will return information about that constraint. It will also include
+// constraints on this table that reference this column (e.g. primary key).
+func (this *Column) Constraints() ([]*TableConstraint, error) {
+	q := squirrel.Select("constraint_name", "constraint_catalog", "constraint_schema").
+		From("information_schema.constraint_column_usage").
+		Where(`table_catalog = ? AND table_schema = ? AND table_name = ? AND column_name = ?`,
+			this.TableCatalog, this.TableSchema, this.TableNameField, this.Name).
+		RunWith(this.opts.Queryer)
+
+	if this.opts.Driver == "postgres" {
+		q = q.PlaceholderFormat(squirrel.Dollar)
+	}
+
+	logQ(q)
+
+	rows, err := q.Query()
+	if err != nil {
+		return []*TableConstraint{}, err
+	}
+	defer rows.Close()
+
+	constraints := []*TableConstraint{}
+	for rows.Next() {
+		c := &TableConstraint{}
+		rows.Scan(&c.ConstraintName, &c.ConstraintCatalog, &c.ConstraintSchema)
+		st := structable.New(this.opts.Queryer, this.opts.Driver).Bind(c.TableName(), c)
+		if err := st.LoadWhere("constraint_catalog = ? AND constraint_schema = ? AND constraint_name = ?",
+			c.ConstraintCatalog, c.ConstraintSchema, c.ConstraintName); err != nil {
+			return constraints, err
+		}
+		constraints = append(constraints, c)
+	}
+	return constraints, rows.Err()
 }
 
 // Keys the restrictions placed on this column due to its use as a key.
