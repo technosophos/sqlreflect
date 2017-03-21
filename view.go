@@ -28,7 +28,7 @@ func (v *View) TableName() string {
 // Columns returns a list of columns for this view.
 //
 // Columns may be from different tables.
-func (v *View) Columns() []*Column {
+func (this *View) Columns() []*Column {
 	return []*Column{}
 }
 
